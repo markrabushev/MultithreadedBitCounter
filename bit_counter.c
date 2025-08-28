@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 struct Node {
     int value;
@@ -8,6 +9,7 @@ struct Node {
 };
 
 struct LinkedList {
+    int size;
     struct Node *head;
     struct Node *tail;
 };
@@ -15,10 +17,22 @@ struct LinkedList {
 void list_init(struct LinkedList* list, int n) {
     list->head = NULL;
     list->tail = NULL;
+    list->size = n;
     for (int i = 0; i < n; i++) {
-        
+        struct Node* node = (struct Node*) malloc(sizeof(struct Node));
+        node->value = rand();
+        node->prev = list->tail;
+        node->next = NULL;
+        if(list->tail) {
+            list->tail->next = node;
+        }
+        list->tail = node;
+        if(!list->head) {
+            list->head = node;
+        }
     }
 }
+
 int main(int argc, char const *argv[])
 {
     if(argc != 2) {
@@ -31,6 +45,8 @@ int main(int argc, char const *argv[])
         return 0;
     }
     srand(time(NULL));
+    struct LinkedList list;
+    list_init(&list, n);
 
     return 0;
 }
