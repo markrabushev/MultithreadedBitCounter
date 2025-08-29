@@ -3,6 +3,8 @@
 #include <time.h>
 #include <pthread.h>
 
+pthread_mutex_t mutex;
+
 struct Node {
     int value;
     struct Node* next;
@@ -36,7 +38,7 @@ int count_zero_bits(int value) {
     int n = 0;
     unsigned int u = (unsigned int)value;
     for (int i = 0; i < 32; i++, u >>= 1) {
-        if ((u & 1) == 0) n++;
+        if (!(u & 1)) n++;
     }
     return n;
 }
@@ -64,7 +66,9 @@ void* count_bits(void* arg) {
     int elements = 0;
 
     while (1) {
+        pthread_mutex_lock(&mutex);
         if (list->head == NULL) {
+            pthread_mutex_unlock(&mutex);
             break;
         }
 
@@ -88,6 +92,7 @@ void* count_bits(void* arg) {
                 list->tail->next = NULL;
             }
         }
+        pthread_mutex_unlock(&mutex);
 
         if (direction == 0) {
             bit_count += count_zero_bits(node->value);
@@ -98,8 +103,8 @@ void* count_bits(void* arg) {
         free(node);
     }
 
-    printf("Количество учтенных элементов %d, Количество %d-х битов, начиная с %s: %llu\n",
-           elements, direction, direction == 0 ? "головы" : "хвоста", bit_count);
+    printf("Количество %d-х битов, начиная с %s: %llu, Количество учтенных элементов %d\n",
+           direction, direction == 0 ? "головы" : "хвоста", bit_count, elements);
     return NULL;
 }
 
@@ -111,18 +116,24 @@ int main(int argc, char const *argv[])
     }
     int n = atoi(argv[1]);
     if (n <= 0) {
-        printf("Количество элементов должно быть положительным");
+        printf("Количество элементов должно быть положительным числом");
         return 0;
     }
     srand(time(NULL));
     struct LinkedList list;
     list_init(&list, n);
 
-    pthread_t thread1;
+    pthread_mutex_init(&mutex, NULL);
+    pthread_t thread1, thread2;
     struct thread_arg arg1 = { &list, 0 };
+    struct thread_arg arg2 = { &list, 1 };
     pthread_create(&thread1, NULL, count_bits, &arg1);
+    pthread_create(&thread2, NULL, count_bits, &arg2);
 
     pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+
+    pthread_mutex_destroy(&mutex);
 
     return 0;
 }
