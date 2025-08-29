@@ -105,7 +105,6 @@ void* count_bits(void* arg) {
 
     printf("Количество %d-х битов, начиная с %s: %llu, Количество учтенных элементов %d\n",
            direction, direction == 0 ? "головы" : "хвоста", bit_count, elements);
-    return NULL;
 }
 
 int main(int argc, char const *argv[])
